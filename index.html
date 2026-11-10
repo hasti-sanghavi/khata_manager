@@ -91,7 +91,13 @@ duesMonth:['Vendor payments due this month','આ મહિને વેન્ડ
 all:['All','બધા'],clients:['Clients','ગ્રાહકો'],vendors:['Vendors','વેન્ડરો'],vtag:['Vendor','વેન્ડર'],qty:['Quantity','જથ્થો'],unit:['Unit','એકમ'],mtr:['Meter','મીટર'],roll:['Roll','રોલ'],
 rate:['Price per {n}','પ્રતિ {n} ભાવ'],final:['Final amount (auto)','કુલ રકમ (આપોઆપ)'],desc:['Description','વિગત'],paidBtn:['− I paid (Debit)','− મેં ચૂકવ્યા (ઉધાર)'],billBtn:['+ Bill / purchase (Credit)','+ બિલ / ખરીદી (જમા)'],
 paidTitle:['I paid (Debit)','મેં ચૂકવ્યા (ઉધાર)'],billTitle:['Bill / purchase (Credit)','બિલ / ખરીદી (જમા)'],addTitle:['Add','ઉમેરો'],pickAcc:['Choose account','ખાતું પસંદ કરો'],
-newAccBtn:['👤 New account','👤 નવું ખાતું'],payIn:['+ Payment received','+ રકમ મળી'],payOut:['− Payment made','− રકમ ચૂકવી'],dueBtn:['📅 Payment due date','📅 ચુકવણીની તારીખ'],month:['Month','મહિનો'],netErr:['Cannot reach Supabase. Check the Project URL and your internet, and open the hosted link in a normal browser (not inside Claude).','Supabase સુધી પહોંચી શકાયું નથી. Project URL અને ઇન્ટરનેટ તપાસો, અને હોસ્ટ કરેલી લિંક સામાન્ય બ્રાઉઝરમાં ખોલો (Claude ની અંદર નહીં).'],resetSetup:['Change Supabase details','Supabase વિગતો બદલો'],recvNote:['Received: ','મળ્યા: '],paidNote:['Paid: ','ચૂકવ્યા: '],dueNote:['due payment','બાકી ચુકવણી']};
+newAccBtn:['👤 New account','👤 નવું ખાતું'],payIn:['+ Payment received','+ રકમ મળી'],payOut:['− Payment made','− રકમ ચૂકવી'],dueBtn:['📅 Payment due date','📅 ચુકવણીની તારીખ'],month:['Month','મહિનો'],netErr:['Cannot reach Supabase. Check the Project URL and your internet, and open the hosted link in a normal browser (not inside Claude).','Supabase સુધી પહોંચી શકાયું નથી. Project URL અને ઇન્ટરનેટ તપાસો, અને હોસ્ટ કરેલી લિંક સામાન્ય બ્રાઉઝરમાં ખોલો (Claude ની અંદર નહીં).'],resetSetup:['Change Supabase details','Supabase વિગતો બદલો'],dueOpt:['Due date (optional)','ચુકવણીની તારીખ (વૈકલ્પિક)'],dueAmt:['Amount due on that date (₹)','તે તારીખે બાકી રકમ (₹)'],emailOpt:['Email (optional)','ઇમેઇલ (વૈકલ્પિક)'],
+qaTitle:['Quick actions','ઝડપી કાર્યો'],qBill:['🧾 Vendor bill','🧾 વેન્ડર બિલ'],monthSales:['Sales this month','આ મહિનાનું વેચાણ'],monthIn:['Received this month','આ મહિને મળ્યા'],
+overdueT:['overdue payments','મુદત વીતેલી ચુકવણી'],next7:['Due in next 7 days','આવતા 7 દિવસમાં બાકી'],trend:['Last 6 months','છેલ્લા 6 મહિના'],topOwe:['Top clients owing you','સૌથી વધુ બાકી ગ્રાહકો'],
+logTitle:['Activity log','પ્રવૃત્તિ લૉગ'],openLog:['Activity log','પ્રવૃત્તિ લૉગ'],noLog:['No activity yet','હજી કોઈ પ્રવૃત્તિ નથી'],logErr:['Could not load the log. Run supabase_upgrade_2.sql in Supabase first.','લૉગ લોડ થયો નથી. પહેલાં Supabase માં supabase_upgrade_2.sql ચલાવો.'],
+lg_acc_add:['Account created','ખાતું બનાવ્યું'],lg_acc_edit:['Account edited','ખાતું સુધાર્યું'],lg_acc_del:['Account deleted','ખાતું કાઢી નાખ્યું'],lg_sale_add:['Sale added','વેચાણ ઉમેર્યું'],
+lg_debit_add:['Debit added','ઉધાર ઉમેર્યું'],lg_credit_add:['Credit added','જમા ઉમેર્યું'],lg_entry_del:['Entry deleted','નોંધ કાઢી નાખી'],lg_due_add:['Due date added','ચુકવણી તારીખ ઉમેરી'],
+lg_due_done:['Due payment completed','બાકી ચુકવણી પૂર્ણ'],lg_due_del:['Due date removed','ચુકવણી તારીખ કાઢી'],loading:['Loading…','લોડ થઈ રહ્યું છે…'],recvNote:['Received: ','મળ્યા: '],paidNote:['Paid: ','ચૂકવ્યા: '],dueNote:['due payment','બાકી ચુકવણી']};
 let lang=LS.get('ledger_lang')||'gu';
 const t=(k,n)=>T[k][lang==='gu'?1:0].replace('{n}',n);
 function setLang(l){lang=l;LS.set('ledger_lang',l);document.documentElement.lang=l;document.title=t('title');render()}
@@ -141,8 +147,8 @@ async function boot(){
 function render(){
   if(!unlocked)return CONFIGURED?lockScreen():boot();
   const vt=view.t;let h='';
-  if(vt==='home')h=home();else if(vt==='accounts')h=accounts();else if(vt==='acc')h=accDetail(view.id);else if(vt==='month')h=monthly();else if(vt==='more')h=more();
-  const tab=(k,l)=>`<button class="${(vt===k||(vt==='acc'&&k==='accounts'))?'on':''}" onclick="nav({t:'${k}'})">${l}</button>`;
+  if(vt==='home')h=home();else if(vt==='accounts')h=accounts();else if(vt==='acc')h=accDetail(view.id);else if(vt==='month')h=monthly();else if(vt==='log')h=logScreen();else if(vt==='more')h=more();
+  const tab=(k,l)=>`<button class="${(vt===k||(vt==='acc'&&k==='accounts')||(vt==='log'&&k==='more'))?'on':''}" onclick="nav({t:'${k}'})">${l}</button>`;
   const fab=(vt==='home'||vt==='accounts')?`<button class="fab" onclick="quickAdd()" aria-label="Add">+</button>`:'';
   $('#app').innerHTML=h+fab+`<div class="tabs">${tab('home',t('tHome'))}${tab('accounts',t('tAcc'))}${tab('month',t('tMonth'))}${tab('more',t('tMore'))}</div>`;
 }
@@ -152,19 +158,35 @@ const vTag=a=>a.kind==='vendor'?` <span class="tag soon">${t('vtag')}</span>`:''
 function dueCard(d){const a=acc(d.acc);return `<div class="card"><div class="row"><div onclick="nav({t:'acc',id:'${d.acc}'})"><div class="b">${esc(a?.name)}${a?vTag(a):''}</div><div class="mut">${fd(d.date)} ${dueTag(d.date)}</div>${d.note?`<div class="mut">${esc(d.note)}</div>`:''}</div>
   <div style="text-align:right"><div class="b ${d.dir==='receive'?'in':'out'}">${inr(d.amt)}</div><button class="s ${d.dir==='receive'?'g':'r'}" onclick="markPaid('${d.id}')">${d.dir==='receive'?t('received'):t('paid')}</button></div></div></div>`}
 function home(){
+  const loc=lang==='gu'?'gu-IN':'en-IN',cur=today().slice(0,7);
   const bs=db.accounts.map(a=>({a,b:bal(a.id)}));
   const recv=bs.filter(x=>x.b>0.004).sort((x,y)=>y.b-x.b),pay=bs.filter(x=>x.b<-0.004).sort((x,y)=>x.b-y.b);
   const tr=recv.reduce((s,x)=>s+x.b,0),tp=pay.reduce((s,x)=>s-x.b,0);
   const dues=[...db.dues].sort((a,b)=>a.date.localeCompare(b.date));
   const dr=dues.filter(d=>d.dir==='receive'),dp=dues.filter(d=>d.dir==='pay');
-  const balRow=(x,c)=>`<div class="card row" onclick="nav({t:'acc',id:'${x.a.id}'})"><span class="b">${esc(x.a.name)}${vTag(x.a)}</span><span class="b ${c}">${inr(x.b)}</span></div>`;
+  const msum=(m,f)=>db.entries.filter(e=>e.date.startsWith(m)&&f(e)).reduce((s,e)=>s+e.amt,0);
+  const fS=e=>e.kind==='sale',fR=e=>e.type==='got'&&!isV(e.acc);
+  const months=[...Array(6)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-(5-i));const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return {k,l:d.toLocaleDateString(loc,{month:'short'}),s:msum(k,fS),r:msum(k,fR)}});
+  const mx=Math.max(1,...months.flatMap(m=>[m.s,m.r]));
+  const trend=`<div style="display:flex;gap:8px;align-items:flex-end;height:110px">${months.map(m=>`<div style="flex:1;display:flex;gap:3px;align-items:flex-end;height:100%"><div style="flex:1;height:${Math.max(2,m.s/mx*100)}%;background:var(--pri);border-radius:3px 3px 0 0"></div><div style="flex:1;height:${Math.max(2,m.r/mx*100)}%;background:var(--in);border-radius:3px 3px 0 0"></div></div>`).join('')}</div>
+  <div style="display:flex;gap:8px;margin-top:4px">${months.map(m=>`<div class="mut" style="flex:1;text-align:center;font-size:12px">${m.l}</div>`).join('')}</div>
+  <div class="mut" style="margin-top:6px;font-size:12px"><span style="color:var(--pri)">■</span> ${t('sales')} &nbsp; <span style="color:var(--in)">■</span> ${t('moneyIn')}</div>`;
+  const hb=(rows,c)=>{const m=Math.max(1,...rows.map(x=>Math.abs(x.b)));return rows.slice(0,5).map(x=>`<div style="margin:10px 0" onclick="nav({t:'acc',id:'${x.a.id}'})"><div class="row"><span>${esc(x.a.name)}${vTag(x.a)}</span><span class="b ${c}">${inr(x.b)}</span></div><div style="height:6px;background:var(--bd);border-radius:3px;margin-top:3px"><div style="height:6px;width:${Math.abs(x.b)/m*100}%;background:var(--${c});border-radius:3px"></div></div></div>`).join('')||`<div class="empty">${t('nobody')}</div>`};
+  const od=db.dues.filter(d=>daysTo(d.date)<0),odR=od.filter(d=>d.dir==='receive').reduce((s,d)=>s+d.amt,0),odP=od.filter(d=>d.dir==='pay').reduce((s,d)=>s+d.amt,0);
+  const wk=db.dues.filter(d=>{const n=daysTo(d.date);return n>=0&&n<=7});
+  const qb=(k,l)=>`<button class="o" style="padding:12px 4px;font-size:13px" onclick="pick('${k}')">${l}</button>`;
+  const stat=(l,v,c,bg)=>`<div class="card" style="margin:0;background:var(--${bg})"><div class="mut">${l}</div><div class="b ${c}" style="font-size:20px">${inr(v)}</div></div>`;
   return `<h1>${t('hello')}</h1>
-  <div class="sum"><div class="card" style="background:var(--inbg)"><div class="mut">${t('toRecv')}</div><div class="big in">${inr(tr)}</div></div>
-  <div class="card" style="background:var(--outbg)"><div class="mut">${t('toPay')}</div><div class="big out">${inr(tp)}</div></div></div>
+  <div class="mut" style="margin-bottom:6px">${t('qaTitle')}</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">${qb('sale',t('newSale'))}${qb('in',t('payIn'))}${qb('out',t('payOut'))}${qb('bill',t('qBill'))}${qb('due',t('dueBtn'))}${qb('acc',t('newAccBtn'))}</div>
+  <div class="sum" style="margin-top:12px">${stat(t('toRecv'),tr,'in','inbg')}${stat(t('toPay'),tp,'out','outbg')}${stat(t('monthSales'),msum(cur,fS),'','card')}${stat(t('monthIn'),msum(cur,fR),'in','card')}</div>
+  ${od.length?`<div class="card" style="margin-top:8px;background:var(--outbg)"><div class="b out">⚠️ ${od.length} ${t('overdueT')}</div><div class="mut">${odR?t('toRecv')+' '+inr(odR):''} ${odP?' · '+t('toPay')+' '+inr(odP):''}</div></div>`:''}
+  ${wk.length?`<div class="card" style="margin-top:8px"><div class="b">📅 ${t('next7')}: ${wk.length}</div></div>`:''}
+  <h2>${t('trend')}</h2><div class="card">${trend}</div>
+  <h2>${t('topOwe')}</h2><div class="card">${hb(recv,'in')}</div>
+  <h2>${t('whomOwe')}</h2><div class="card">${hb(pay,'out')}</div>
   <h2>${t('dueRecv')}</h2>${dr.map(dueCard).join('')||`<div class="empty">${t('noDates')}</div>`}
-  <h2>${t('duePay')}</h2>${dp.map(dueCard).join('')||`<div class="empty">${t('noDates')}</div>`}
-  <h2>${t('whoOwes')}</h2>${recv.map(x=>balRow(x,'in')).join('')||`<div class="empty">${t('nobody')}</div>`}
-  <h2>${t('whomOwe')}</h2>${pay.map(x=>balRow(x,'out')).join('')||`<div class="empty">${t('nobody')}</div>`}`;
+  <h2>${t('duePay')}</h2>${dp.map(dueCard).join('')||`<div class="empty">${t('noDates')}</div>`}`;
 }
 let q='',flt='all';
 function accounts(){
@@ -189,7 +211,7 @@ function accDetail(id){
   ${(e.files||[]).map(f=>`<button class="s o" style="margin-top:6px" onclick="openFile('${f.id}','${esc(f.name)}')">📎 ${esc(f.name)}</button>`).join(' ')}
   <div style="margin-top:6px"><button class="s o" onclick="delEntry('${e.id}')">${t('del')}</button></div></div>`};
   return `<div class="row"><button class="o s" onclick="nav({t:'accounts'})">${t('back')}</button><button class="o s" onclick="accForm('${id}')">${t('edit')}</button></div>
-  <h1>${esc(a.name)}${vTag(a)}</h1><div class="mut">${esc(a.phone||'')} ${esc(a.notes||'')}</div>
+  <h1>${esc(a.name)}${vTag(a)}</h1><div class="mut">${esc(a.phone||'')} ${a.email?`<a href="mailto:${esc(a.email)}">${esc(a.email)}</a>`:''} ${esc(a.notes||'')}</div>
   <div class="card" style="margin-top:10px;background:${b>0?'var(--inbg)':b<0?'var(--outbg)':'var(--card)'}"><div class="mut">${b>0?t('theyOwe'):b<0?t('iOwe'):t('allSettled')}</div><div class="big b ${b>0?'in':'out'}" style="font-size:26px">${inr(b)}</div></div>
   ${v?'':`<button style="width:100%;margin-bottom:8px" onclick="entryForm('${id}','gave','sale')">${t('newSale')}</button>`}
   <div class="row" style="gap:8px"><button class="r" style="flex:1" onclick="entryForm('${id}','gave')">${v?t('paidBtn'):t('gaveBtn')}</button><button class="g" style="flex:1" onclick="entryForm('${id}','got')">${v?t('billBtn'):t('gotBtn')}</button></div>
@@ -233,44 +255,56 @@ function quickAdd(){
 function more(){
   return `<h1>${t('more')}</h1>
   <div class="card"><div class="b">${t('language')}</div><div class="row" style="margin-top:8px;gap:8px"><button class="${lang==='gu'?'':'o'}" style="flex:1" onclick="setLang('gu')">ગુજરાતી</button><button class="${lang==='en'?'':'o'}" style="flex:1" onclick="setLang('en')">English</button></div></div>
+  <div class="card"><button class="o" style="width:100%" onclick="nav({t:'log'})">📜 ${t('openLog')}</button></div>
   <div class="card"><div class="b">${t('backup')}</div><p class="mut">${t('backupDesc2')}</p><button onclick="backup()">${t('dlBackup')}</button></div>
   <div class="card"><button class="o" onclick="logout()">${t('logout')}</button></div>`;
 }
 // ---------- forms ----------
 function sheet(html){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);return m}
-function accForm(id){
-  const a=id?acc(id):{name:'',phone:'',notes:'',kind:'client'};
+function accForm(id,pre){
+  const a=id?acc(id):{name:'',phone:'',notes:'',email:'',kind:pre||'client'};
   const m=sheet(`<h1>${id?t('editAcc'):t('newAcc')}</h1><label>${t('kind')}</label><select id="k"><option value="client" ${a.kind!=='vendor'?'selected':''}>${t('client')}</option><option value="vendor" ${a.kind==='vendor'?'selected':''}>${t('vendor')}</option></select>
-  <label>${t('name')}</label><input id="n" value="${esc(a.name)}"><label>${t('phoneOpt')}</label><input id="p" inputmode="tel" value="${esc(a.phone)}"><label>${t('notesOpt')}</label><textarea id="no" rows="2">${esc(a.notes)}</textarea>
+  <label>${t('name')}</label><input id="n" value="${esc(a.name)}"><label>${t('phoneOpt')}</label><input id="p" inputmode="tel" value="${esc(a.phone)}">
+  <div id="eb" style="display:${a.kind==='vendor'?'block':'none'}"><label>${t('emailOpt')}</label><input id="em2" type="email" inputmode="email" value="${esc(a.email||'')}"></div>
+  <label>${t('notesOpt')}</label><textarea id="no" rows="2">${esc(a.notes)}</textarea>
   <div class="btns"><button class="o" id="c">${t('cancel')}</button><button id="s">${t('save')}</button></div>${id?`<button class="r" style="width:100%;margin-top:10px" id="d">${t('delAcc')}</button>`:''}`);
+  m.querySelector('#k').onchange=e=>{m.querySelector('#eb').style.display=e.target.value==='vendor'?'block':'none'};
   m.querySelector('#c').onclick=()=>m.remove();
   m.querySelector('#s').onclick=async e=>{const n=m.querySelector('#n').value.trim();if(!n)return;e.target.disabled=true;
-    const row={name:n,kind:m.querySelector('#k').value,phone:m.querySelector('#p').value,notes:m.querySelector('#no').value};
+    const kd=m.querySelector('#k').value,em=m.querySelector('#em2').value.trim();
+    const row={name:n,kind:kd,phone:m.querySelector('#p').value,notes:m.querySelector('#no').value};
+    if(kd==='vendor'&&(em||a.email))row.email=em;
     const r=id?await sb.from('accounts').update(row).eq('id',id):await sb.from('accounts').insert(row);
-    if(!okr(r)){e.target.disabled=false;return}m.remove();await refresh()};
-  if(id)m.querySelector('#d').onclick=async()=>{if(confirm(t('delAccQ'))){if(okr(await sb.from('accounts').delete().eq('id',id))){m.remove();view={t:'accounts'};await refresh()}}};
+    if(!okr(r)){e.target.disabled=false;return}await logAct(id?'acc_edit':'acc_add',n);m.remove();await refresh()};
+  if(id)m.querySelector('#d').onclick=async()=>{if(confirm(t('delAccQ'))){if(okr(await sb.from('accounts').delete().eq('id',id))){await logAct('acc_del',a.name);m.remove();view={t:'accounts'};await refresh()}}};
 }
 function entryForm(id,type,kind){
-  const sale=kind==='sale',v=isV(id);
+  const sale=kind==='sale',v=isV(id),nm=acc(id).name;
   const title=sale?t('newSale'):v?(type==='gave'?t('paidTitle'):t('billTitle')):(type==='gave'?t('gaveTitle'):t('gotTitle'));
   const fields=sale?`<label>${t('qty')}</label><input id="q" type="number" inputmode="decimal" step="any">
   <label>${t('unit')}</label><select id="u"><option value="meter">${t('mtr')}</option><option value="roll">${t('roll')}</option></select>
   <label id="rl">${t('rate',t('mtr'))}</label><input id="r" type="number" inputmode="decimal" step="any">
   <label>${t('final')}</label><input id="a" type="number" inputmode="decimal" step="any" style="font-weight:700">`
   :`<label>${t('amount')}</label><input id="a" type="number" inputmode="decimal" step="any">`;
-  const m=sheet(`<h1>${title} — ${esc(acc(id).name)}</h1>${fields}
+  const m=sheet(`<h1>${title} — ${esc(nm)}</h1>${fields}
   <label>${t('date')}</label><input id="d" type="date" value="${today()}">
+  <label>${t('dueOpt')}</label><input id="du" type="date">
+  <div id="dab" style="display:none"><label>${t('dueAmt')}</label><input id="dua" type="number" inputmode="decimal" step="any"></div>
   <label>${sale?t('desc'):t('note')}</label><textarea id="no" rows="2" placeholder="${sale?'':t('notePh')}"></textarea>
   <label>${t('docs')}</label><input id="f" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
   <div class="btns"><button class="o" id="c">${t('cancel')}</button><button class="${type==='gave'?'r':'g'}" id="s">${t('save')}</button></div>`);
-  const $m=x=>m.querySelector(x);
-  if(sale){const calc=()=>{const qv=parseFloat($m('#q').value),rv=parseFloat($m('#r').value);if(qv>0&&rv>0)$m('#a').value=Math.round(qv*rv*100)/100};
+  const $m=x=>m.querySelector(x);let touched=false;
+  const defDue=()=>{if(touched)return;const am=parseFloat($m('#a').value)||0;const incr=(type==='gave'&&!v)||(type==='got'&&v);let val=am;
+    if(!incr){const after=bal(id)+(type==='gave'?am:-am),rem=v?-after:after;val=rem>0?Math.round(rem*100)/100:am}$m('#dua').value=am?val:''};
+  $m('#dua').oninput=()=>{touched=true};$m('#a').addEventListener('input',defDue);
+  $m('#du').onchange=()=>{$m('#dab').style.display=$m('#du').value?'block':'none';defDue()};
+  if(sale){const calc=()=>{const qv=parseFloat($m('#q').value),rv=parseFloat($m('#r').value);if(qv>0&&rv>0){$m('#a').value=Math.round(qv*rv*100)/100;defDue()}};
     $m('#q').oninput=calc;$m('#r').oninput=calc;$m('#u').onchange=()=>{$m('#rl').textContent=t('rate',$m('#u').value==='roll'?t('roll'):t('mtr'));calc()}}
   $m('#c').onclick=()=>m.remove();
   $m('#s').onclick=async e=>{const amt=parseFloat($m('#a').value);if(!(amt>0))return;
     let qv=null,rv=null,uv=null;if(sale){qv=parseFloat($m('#q').value);rv=parseFloat($m('#r').value);uv=$m('#u').value;if(!(qv>0&&rv>0))return}
     e.target.disabled=true;
-    const eid=crypto.randomUUID(),files=[];
+    const eid=crypto.randomUUID(),files=[],note=$m('#no').value.trim();
     for(const f of $m('#f').files){
       const ext=(f.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').slice(0,5)||'bin';
       const path=`${uidv}/${eid}/${uid()}.${ext}`;
@@ -278,27 +312,55 @@ function entryForm(id,type,kind){
       if(!okr(u)){e.target.disabled=false;return}
       files.push({id:path,name:f.name});
     }
-    const r=await sb.from('entries').insert({id:eid,account_id:id,type,amount:amt,entry_date:$m('#d').value||today(),note:$m('#no').value.trim(),files,kind:sale?'sale':'',qty:qv,unit:uv||'',rate:rv});
-    if(!okr(r)){e.target.disabled=false;return}m.remove();await refresh()};
+    const r=await sb.from('entries').insert({id:eid,account_id:id,type,amount:amt,entry_date:$m('#d').value||today(),note,files,kind:sale?'sale':'',qty:qv,unit:uv||'',rate:rv});
+    if(!okr(r)){e.target.disabled=false;return}
+    await logAct(sale?'sale_add':type==='gave'?'debit_add':'credit_add',nm,amt,note.slice(0,80));
+    const du=$m('#du').value;
+    if(du){const da=parseFloat($m('#dua').value)>0?parseFloat($m('#dua').value):amt;
+      const dr=await sb.from('dues').insert({account_id:id,dir:v?'pay':'receive',amount:da,due_date:du,note:note.slice(0,80)});
+      if(okr(dr))await logAct('due_add',nm,da,du)}
+    m.remove();await refresh()};
 }
 function dueForm(id){
   const m=sheet(`<h1>${t('dueTitle')} — ${esc(acc(id).name)}</h1>
-  <label>${t('type')}</label><select id="t"><option value="receive">${t('recvFrom')}</option><option value="pay">${t('payTo')}</option></select>
+  <label>${t('type')}</label><select id="t"><option value="receive" ${isV(id)?'':'selected'}>${t('recvFrom')}</option><option value="pay" ${isV(id)?'selected':''}>${t('payTo')}</option></select>
   <label>${t('amount')}</label><input id="a" type="number" inputmode="decimal"><label>${t('dueDate')}</label><input id="d" type="date" value="${today()}"><label>${t('note')}</label><input id="no">
   <div class="btns"><button class="o" id="c">${t('cancel')}</button><button id="s">${t('save')}</button></div>`);
   m.querySelector('#c').onclick=()=>m.remove();
   m.querySelector('#s').onclick=async e=>{const amt=parseFloat(m.querySelector('#a').value);if(!(amt>0))return;e.target.disabled=true;
-    const r=await sb.from('dues').insert({account_id:id,dir:m.querySelector('#t').value,amount:amt,due_date:m.querySelector('#d').value||today(),note:m.querySelector('#no').value.trim()});
-    if(!okr(r)){e.target.disabled=false;return}m.remove();await refresh()};
+    const dt=m.querySelector('#d').value||today();
+    const r=await sb.from('dues').insert({account_id:id,dir:m.querySelector('#t').value,amount:amt,due_date:dt,note:m.querySelector('#no').value.trim()});
+    if(!okr(r)){e.target.disabled=false;return}await logAct('due_add',acc(id).name,amt,dt);m.remove();await refresh()};
+}
+// ---------- activity log ----------
+async function logAct(action,name,amt,detail){try{await sb.from('activity_log').insert({action,account_name:name||'',amount:amt==null?null:amt,detail:detail||''})}catch(e){}}
+function logScreen(){setTimeout(loadLog,0);return `<div class="row"><button class="o s" onclick="nav({t:'more'})">${t('back')}</button></div><h1>${t('logTitle')}</h1><div id="logl" class="empty">${t('loading')}</div>`}
+async function loadLog(){const r=await sb.from('activity_log').select('*').order('created_at',{ascending:false}).limit(200);const el=$('#logl');if(!el)return;
+  if(r.error){el.textContent=t('logErr');return}
+  el.className='';el.innerHTML=r.data.map(l=>`<div class="card"><div class="b">${T['lg_'+l.action]?t('lg_'+l.action):esc(l.action)} ${l.amount!=null?inr(Number(l.amount)):''}</div><div class="mut">${esc(l.account_name)}${l.detail?' · '+esc(l.detail):''}</div><div class="mut">${new Date(l.created_at).toLocaleString(lang==='gu'?'gu-IN':'en-IN')}</div></div>`).join('')||`<div class="empty">${t('noLog')}</div>`}
+// ---------- quick picker (home buttons) ----------
+function pick(act){
+  if(act==='acc')return accForm();
+  const vend=act==='out'||act==='bill';
+  const accs=db.accounts.filter(a=>act==='due'?true:vend?a.kind==='vendor':a.kind!=='vendor');
+  if(!accs.length)return accForm(null,vend?'vendor':'client');
+  const lbl={sale:t('newSale'),in:t('payIn'),out:t('payOut'),bill:t('qBill'),due:t('dueBtn')}[act];
+  const m=sheet(`<h1>${lbl}</h1><input id="ps" placeholder="${t('search')}"><div id="pl"></div><button class="o" style="width:100%;margin-top:8px" id="pn">${t('newAccBtn')}</button>`);
+  const paint=()=>{const qq=m.querySelector('#ps').value.toLowerCase();
+    m.querySelector('#pl').innerHTML=accs.filter(a=>a.name.toLowerCase().includes(qq)).map(a=>`<div class="card row" data-id="${a.id}"><span class="b">${esc(a.name)}${vTag(a)}</span><span class="b ${bal(a.id)>0?'in':bal(a.id)<0?'out':'mut'}">${inr(bal(a.id))}</span></div>`).join('');
+    m.querySelectorAll('#pl .card').forEach(c=>c.onclick=()=>{const id=c.dataset.id;m.remove();
+      if(act==='sale')entryForm(id,'gave','sale');else if(act==='in'||act==='bill')entryForm(id,'got');else if(act==='out')entryForm(id,'gave');else dueForm(id)})};
+  m.querySelector('#ps').oninput=paint;paint();m.querySelector('#pn').onclick=()=>{m.remove();accForm(null,vend?'vendor':'client')};
 }
 // ---------- actions ----------
 async function markPaid(did){const d=db.dues.find(x=>x.id===did);if(!d)return;
   const r=await sb.from('entries').insert({account_id:d.acc,type:d.dir==='receive'?'got':'gave',amount:d.amt,entry_date:today(),note:(d.dir==='receive'?t('recvNote'):t('paidNote'))+(d.note||t('dueNote')),files:[]});
-  if(!okr(r))return;if(okr(await sb.from('dues').delete().eq('id',did)))await refresh()}
-async function delDue(id){if(confirm(t('delDueQ'))&&okr(await sb.from('dues').delete().eq('id',id)))await refresh()}
+  if(!okr(r))return;if(okr(await sb.from('dues').delete().eq('id',did))){await logAct('due_done',acc(d.acc)?acc(d.acc).name:'',d.amt,'');await refresh()}}
+async function delDue(id){const d=db.dues.find(x=>x.id===id);if(confirm(t('delDueQ'))&&okr(await sb.from('dues').delete().eq('id',id))){await logAct('due_del',d&&acc(d.acc)?acc(d.acc).name:'',d?d.amt:null,'');await refresh()}}
 async function delEntry(id){if(!confirm(t('delEntryQ')))return;
   const e=db.entries.find(x=>x.id===id);
-  if(okr(await sb.from('entries').delete().eq('id',id))){if(e&&e.files.length)await sb.storage.from('documents').remove(e.files.map(f=>f.id));await refresh()}}
+  if(okr(await sb.from('entries').delete().eq('id',id))){await logAct('entry_del',e&&acc(e.acc)?acc(e.acc).name:'',e?e.amt:null,e?(e.kind==='sale'?t('sale'):e.type==='gave'?t('dr'):t('cr')):'');
+    if(e&&e.files.length)await sb.storage.from('documents').remove(e.files.map(f=>f.id));await refresh()}}
 async function openFile(path,name){const r=await sb.storage.from('documents').createSignedUrl(path,300);
   if(r.error||!r.data)return alert(t('noFile'));window.open(r.data.signedUrl,'_blank')}
 function backup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}));a.download='ledger-backup-'+today()+'.json';a.click()}
