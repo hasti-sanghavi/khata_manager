@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Ledger / મારી ખાતાવહી</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;600;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📒</text></svg>">
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1d1d1b;--mut:#6b6a64;--bd:#e4e2da;--in:#16794c;--out:#b3261e;--pri:#1f4e79;--inbg:#e6f4ec;--outbg:#fbeae8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171715;--card:#222220;--tx:#f0efe8;--mut:#a09f96;--bd:#35342f;--in:#5fcf95;--out:#ff8a80;--pri:#7db4e6;--inbg:#1b2e24;--outbg:#341f1d}}
+:root[data-theme="dark"]{--bg:#171715;--card:#222220;--tx:#f0efe8;--mut:#a09f96;--bd:#35342f;--in:#5fcf95;--out:#ff8a80;--pri:#7db4e6;--inbg:#1b2e24;--outbg:#341f1d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 'Noto Sans Gujarati',-apple-system,Segoe UI,Roboto,sans-serif}
+#app{max-width:640px;margin:0 auto;padding:14px 14px 90px}
+h1{font-size:22px;margin:6px 0 12px}h2{font-size:16px;margin:18px 0 8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mut{color:var(--mut);font-size:13px}.in{color:var(--in)}.out{color:var(--out)}.b{font-weight:600}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sum .card{margin:0}.sum .big{font-size:22px;font-weight:700}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--pri);color:#fff;cursor:pointer}
+button.g{background:var(--in)}button.r{background:var(--out)}button.o{background:transparent;color:var(--pri);border:1px solid var(--bd)}button.s{padding:6px 10px;font-size:14px}
+input,select,textarea{font:inherit;width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);margin:4px 0 10px}
+label{font-size:13px;color:var(--mut)}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs button{flex:1;background:none;color:var(--mut);border-radius:0;padding:14px 4px}.tabs button.on{color:var(--pri);font-weight:700}
+.tag{font-size:12px;padding:2px 8px;border-radius:99px}.tag.over{background:var(--outbg);color:var(--out)}.tag.soon{background:var(--inbg);color:var(--in)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:16px 16px 0 0;padding:16px}
+.sheet .btns{display:flex;gap:8px}.sheet .btns>*{flex:1}
+.pin{max-width:320px;margin:20vh auto;text-align:center}.pin input{text-align:center;font-size:24px;letter-spacing:8px}
+a{color:var(--pri)}.fab{position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:58px;height:58px;border-radius:50%;font-size:30px;line-height:1;padding:0;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:5}.lang{position:absolute;top:10px;right:12px;padding:6px 10px;font-size:13px}.empty{text-align:center;color:var(--mut);padding:24px 0}
+</style></head><body><div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+// ---------- config: paste your Supabase values ----------
+// Option A: paste your values here.  Option B (no editing needed): leave as is and enter them on the app's first screen,
+// or open the link once as  <your-site>/?u=PROJECT_URL&k=ANON_KEY
+const FILE_URL='YOUR_SUPABASE_URL';
+const FILE_KEY='YOUR_SUPABASE_ANON_KEY';
+const _g=k=>{try{const v=localStorage.getItem(k);if(v)return v}catch(e){}const m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));return m?decodeURIComponent(m[1]):null};
+const _s=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}try{document.cookie=k+'='+encodeURIComponent(v)+'; max-age=315360000; path=/; SameSite=Lax'}catch(e){}};
+try{const p=new URLSearchParams(location.search);if(p.get('u')&&p.get('k')){_s('sb_url',p.get('u').trim());_s('sb_key',p.get('k').trim());history.replaceState(null,'',location.pathname)}}catch(e){}
+const SUPABASE_URL=FILE_URL.startsWith('YOUR_')?(_g('sb_url')||FILE_URL):FILE_URL;
+const SUPABASE_KEY=FILE_KEY.startsWith('YOUR_')?(_g('sb_key')||FILE_KEY):FILE_KEY;
+const CONFIGURED=!SUPABASE_URL.startsWith('YOUR_');
+const sb=CONFIGURED?supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const mem={};
+const LS={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+let db={accounts:[],entries:[],dues:[]},uidv=null;
+async function load(){
+  const [a,e,d]=await Promise.all([sb.from('accounts').select('*').order('name'),sb.from('entries').select('*'),sb.from('dues').select('*')]);
+  if(a.error||e.error||d.error){alert(t('saveErr')+' '+(a.error||e.error||d.error).message);return}
+  db.accounts=a.data;
+  db.entries=e.data.map(x=>({id:x.id,acc:x.account_id,type:x.type,amt:Number(x.amount),date:x.entry_date,note:x.note,files:x.files||[],kind:x.kind||'',qty:Number(x.qty)||0,unit:x.unit||'',rate:Number(x.rate)||0,ts:new Date(x.created_at).getTime()}));
+  db.dues=d.data.map(x=>({id:x.id,acc:x.account_id,dir:x.dir,amt:Number(x.amount),date:x.due_date,note:x.note}));
+}
+const refresh=async()=>{await load();render()};
+const okr=r=>{if(r.error){alert(t('saveErr')+' '+r.error.message);return false}return true};
+// ---------- language ----------
+const T={
+title:['My Ledger','મારી ખાતાવહી'],enterPin:['Enter your PIN','તમારો PIN દાખલ કરો'],createPin:['Create a 4-digit PIN to protect your ledger','ખાતાવહી સુરક્ષિત કરવા 4 અંકનો PIN બનાવો'],
+open:['Open','ખોલો'],setPin:['Set PIN','PIN સેટ કરો'],four:['Enter 4 digits','4 અંક દાખલ કરો'],wrong:['Wrong PIN','ખોટો PIN'],
+hello:['Hello 👋','નમસ્તે 👋'],toRecv:['To receive','લેવાના'],toPay:['To pay','દેવાના'],
+dueRecv:['📥 Payments due to receive','📥 લેવાની બાકી ચુકવણી'],duePay:['📤 Payments due to send','📤 દેવાની બાકી ચુકવણી'],noDates:['No dates set','કોઈ તારીખ નથી'],
+whoOwes:['Who owes me','મારે કોની પાસેથી લેવાના'],whomOwe:['Whom I owe','મારે કોને દેવાના'],nobody:['Nobody','કોઈ નહીં'],
+tHome:['🏠 Home','🏠 હોમ'],tAcc:['👥 Accounts','👥 ખાતાં'],tMore:['⚙️ More','⚙️ વધુ'],accounts:['Accounts','ખાતાં'],new:['+ New','+ નવું'],search:['Search','શોધો'],
+noAcc:['No accounts yet. Tap “+ New”.','હજી કોઈ ખાતું નથી. “+ નવું” દબાવો.'],settled:['settled','ચૂકતે'],back:['← Back','← પાછા'],edit:['Edit','સુધારો'],
+theyOwe:['They owe me','તેમણે મને આપવાના'],iOwe:['I owe them','મારે તેમને આપવાના'],allSettled:['All settled','બધું ચૂકતે'],
+gaveBtn:['− I gave (Debit)','− મેં આપ્યા (ઉધાર)'],gotBtn:['+ I got (Credit)','+ મને મળ્યા (જમા)'],addDue:['📅 Add a payment due date','📅 ચુકવણીની તારીખ ઉમેરો'],
+upcoming:['Upcoming','આગામી'],received:['Received','મળ્યા'],paid:['Paid','ચૂકવ્યા'],ledger:['Ledger','ખાતાવહી'],balance:['Balance','બાકી'],
+dr:['Debit −','ઉધાર −'],cr:['Credit +','જમા +'],noEntries:['No entries yet','હજી કોઈ નોંધ નથી'],del:['Delete','કાઢી નાખો'],
+more:['More','વધુ'],backup:['Backup','બેકઅપ'],backupDesc:['Save a copy of all accounts and entries. Attached documents are not included, so keep the originals too.','બધાં ખાતાં અને નોંધોની નકલ સાચવો. જોડેલા દસ્તાવેજો તેમાં આવતા નથી, એટલે મૂળ નકલો સાચવી રાખો.'],
+dlBackup:['Download backup','બેકઅપ ડાઉનલોડ કરો'],restore:['Restore backup','બેકઅપ પાછું લાવો'],changePin:['Change PIN','PIN બદલો'],resetPin:['Reset PIN','PIN રીસેટ કરો'],
+lockNow:['Lock now','હમણાં લૉક કરો'],lock:['Lock','લૉક'],localNote:['Data is stored on this device and browser only.','ડેટા ફક્ત આ ફોન/બ્રાઉઝરમાં સચવાય છે.'],
+language:['Language','ભાષા'],editAcc:['Edit account','ખાતું સુધારો'],newAcc:['New account','નવું ખાતું'],name:['Name','નામ'],phoneOpt:['Phone (optional)','ફોન (વૈકલ્પિક)'],
+notesOpt:['Notes (optional)','નોંધ (વૈકલ્પિક)'],cancel:['Cancel','રદ કરો'],save:['Save','સાચવો'],delAcc:['Delete account','ખાતું કાઢી નાખો'],
+delAccQ:['Delete this account and all its entries?','આ ખાતું અને તેની બધી નોંધો કાઢી નાખવી?'],gaveTitle:['I gave (Debit)','મેં આપ્યા (ઉધાર)'],gotTitle:['I got (Credit)','મને મળ્યા (જમા)'],
+amount:['Amount (₹)','રકમ (₹)'],date:['Date','તારીખ'],note:['Note','નોંધ'],notePh:['e.g. invoice no., cheque no., reason','દા.ત. બિલ નં., ચેક નં., કારણ'],
+docs:['Documents / photos (optional)','દસ્તાવેજ / ફોટા (વૈકલ્પિક)'],dueTitle:['Payment due','બાકી ચુકવણી'],type:['Type','પ્રકાર'],
+recvFrom:['To receive from them','તેમની પાસેથી લેવાના'],payTo:['To pay to them','તેમને ચૂકવવાના'],dueDate:['Due date','ચુકવણીની તારીખ'],
+overdue:['{n}d overdue','{n} દિવસ મોડું'],today:['Today','આજે'],inDays:['in {n}d','{n} દિવસમાં'],delDueQ:['Remove this due date?','આ તારીખ કાઢી નાખવી?'],
+delEntryQ:['Delete this entry?','આ નોંધ કાઢી નાખવી?'],noFile:['File not found on this device','આ ફોનમાં ફાઇલ મળી નથી'],noPrev:['Preview not available for this file type.','આ ફાઇલનો પ્રિવ્યૂ ઉપલબ્ધ નથી.'],
+close:['Close','બંધ કરો'],notAvail:['Backup is not available in this view','અહીં બેકઅપ ઉપલબ્ધ નથી'],badBackup:['Not a valid backup file','બેકઅપ ફાઇલ માન્ય નથી'],
+replaceQ:['Replace current data with this backup?','હાલનો ડેટા આ બેકઅપથી બદલવો?'],email:['Email','ઇમેઇલ'],password:['Password','પાસવર્ડ'],login:['Log in','લૉગ ઇન'],loginErr:['Wrong email or password','ઇમેઇલ અથવા પાસવર્ડ ખોટો છે'],
+logout:['Log out','લૉગ આઉટ'],saveErr:['Something went wrong:','કંઈક ખોટું થયું:'],setupMsg:['First-time setup: enter your Supabase details (once on this device).','પહેલી વાર સેટઅપ: તમારી Supabase વિગતો દાખલ કરો (આ ફોન પર એક વાર).'],urlLbl:['Project URL','Project URL'],keyLbl:['Anon public key','Anon public key'],
+backupDesc2:['Download a copy of all accounts and entries. Your data is also stored safely online.','બધાં ખાતાં અને નોંધોની નકલ ડાઉનલોડ કરો. તમારો ડેટા ઓનલાઇન પણ સુરક્ષિત છે.'],
+tMonth:['📊 Monthly','📊 માસિક'],monthly:['Monthly report','માસિક રિપોર્ટ'],sales:['Sales','વેચાણ'],sale:['Sale','વેચાણ'],newSale:['🧾 New sale','🧾 નવું વેચાણ'],
+moneyIn:['Money received','મળેલી રકમ'],paidVendors:['Paid to vendors','વેન્ડરોને ચૂકવ્યા'],purchases:['Purchases (bills)','ખરીદી (બિલ)'],vendorsToPay:['Vendors to pay','વેન્ડરોને ચૂકવવાના'],
+toCollect:['To collect from clients','ગ્રાહકો પાસેથી લેવાના'],salesList:['Sales this month','આ મહિનાના વેચાણ'],noSales:['No sales this month','આ મહિને કોઈ વેચાણ નથી'],
+duesMonth:['Vendor payments due this month','આ મહિને વેન્ડરોને ચૂકવવાના'],kind:['Account type','ખાતાનો પ્રકાર'],client:['Client (customer)','ગ્રાહક'],vendor:['Vendor (supplier)','વેન્ડર (સપ્લાયર)'],
+all:['All','બધા'],clients:['Clients','ગ્રાહકો'],vendors:['Vendors','વેન્ડરો'],vtag:['Vendor','વેન્ડર'],qty:['Quantity','જથ્થો'],unit:['Unit','એકમ'],mtr:['Meter','મીટર'],roll:['Roll','રોલ'],
+rate:['Price per {n}','પ્રતિ {n} ભાવ'],final:['Final amount (auto)','કુલ રકમ (આપોઆપ)'],desc:['Description','વિગત'],paidBtn:['− I paid (Debit)','− મેં ચૂકવ્યા (ઉધાર)'],billBtn:['+ Bill / purchase (Credit)','+ બિલ / ખરીદી (જમા)'],
+paidTitle:['I paid (Debit)','મેં ચૂકવ્યા (ઉધાર)'],billTitle:['Bill / purchase (Credit)','બિલ / ખરીદી (જમા)'],addTitle:['Add','ઉમેરો'],pickAcc:['Choose account','ખાતું પસંદ કરો'],
+newAccBtn:['👤 New account','👤 નવું ખાતું'],payIn:['+ Payment received','+ રકમ મળી'],payOut:['− Payment made','− રકમ ચૂકવી'],dueBtn:['📅 Payment due date','📅 ચુકવણીની તારીખ'],month:['Month','મહિનો'],netErr:['Cannot reach Supabase. Check the Project URL and your internet, and open the hosted link in a normal browser (not inside Claude).','Supabase સુધી પહોંચી શકાયું નથી. Project URL અને ઇન્ટરનેટ તપાસો, અને હોસ્ટ કરેલી લિંક સામાન્ય બ્રાઉઝરમાં ખોલો (Claude ની અંદર નહીં).'],resetSetup:['Change Supabase details','Supabase વિગતો બદલો'],recvNote:['Received: ','મળ્યા: '],paidNote:['Paid: ','ચૂકવ્યા: '],dueNote:['due payment','બાકી ચુકવણી']};
+let lang=LS.get('ledger_lang')||'gu';
+const t=(k,n)=>T[k][lang==='gu'?1:0].replace('{n}',n);
+function setLang(l){lang=l;LS.set('ledger_lang',l);document.documentElement.lang=l;document.title=t('title');render()}
+const langBtn=()=>`<button class="o lang" onclick="setLang('${lang==='gu'?'en':'gu'}')">${lang==='gu'?'English':'ગુજરાતી'}</button>`;
+// ---------- helpers ----------
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const inr=n=>'₹'+Math.abs(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+const today=()=>new Date().toISOString().slice(0,10);
+const fd=d=>d?new Date(d+'T00:00').toLocaleDateString(lang==='gu'?'gu-IN':'en-IN',{day:'numeric',month:'short',year:'numeric'}):'';
+const acc=id=>db.accounts.find(a=>a.id===id);
+// balance>0: they owe me (to receive). <0: I owe them (to pay)
+const bal=id=>db.entries.filter(e=>e.acc===id).reduce((s,e)=>s+(e.type==='gave'?e.amt:-e.amt),0);
+const daysTo=d=>Math.round((new Date(d+'T00:00')-new Date(today()+'T00:00'))/864e5);
+const dueTag=d=>{const n=daysTo(d);return n<0?`<span class="tag over">${t('overdue',-n)}</span>`:n===0?`<span class="tag over">${t('today')}</span>`:`<span class="tag soon">${t('inDays',n)}</span>`};
+let view={t:'home'};
+function nav(v){view=v;render();scrollTo(0,0)}
+// ---------- login ----------
+let unlocked=false;
+function lockScreen(){
+  $('#app').innerHTML=`<div class="pin">${langBtn()}<div style="font-size:48px">📒</div><h1>${t('title')}</h1>
+  <input id="em" type="email" autocomplete="username" placeholder="${t('email')}" style="letter-spacing:0;font-size:16px;text-align:left">
+  <input id="pw" type="password" autocomplete="current-password" placeholder="${t('password')}" style="letter-spacing:0;font-size:16px;text-align:left">
+  <p id="pe" class="out"></p><button id="go" style="width:100%">${t('login')}</button>
+  ${FILE_URL.startsWith('YOUR_')?`<button id="rs" class="o s" style="margin-top:14px">${t('resetSetup')}</button>`:''}</div>`;
+  const go=async()=>{let error;try{({error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value}))}catch(e){error=e}
+    if(error){$('#pe').textContent=/fetch|network|load failed/i.test(error.message||'')?t('netErr'):t('loginErr');return}
+    try{await enter()}catch(e){$('#pe').textContent=t('netErr')}};
+  $('#rs').onclick=resetCfg;
+  $('#go').onclick=go;$('#pw').onkeydown=e=>{if(e.key==='Enter')go()};
+}
+function resetCfg(){try{localStorage.removeItem('sb_url');localStorage.removeItem('sb_key')}catch(e){}document.cookie='sb_url=; max-age=0; path=/';document.cookie='sb_key=; max-age=0; path=/';location.reload()}
+async function enter(){const {data}=await sb.auth.getSession();uidv=data.session.user.id;await load();unlocked=true;render()}
+async function logout(){await sb.auth.signOut();unlocked=false;db={accounts:[],entries:[],dues:[]};render()}
+async function boot(){
+  document.documentElement.lang=lang;document.title=t('title');
+  if(!CONFIGURED){$('#app').innerHTML=`<div class="pin">${langBtn()}<div style="font-size:48px">📒</div><p class="mut">${t('setupMsg')}</p>
+    <label>${t('urlLbl')}</label><input id="su" placeholder="https://xxxx.supabase.co" style="letter-spacing:0;font-size:15px;text-align:left">
+    <label>${t('keyLbl')}</label><input id="sk" placeholder="eyJ..." style="letter-spacing:0;font-size:15px;text-align:left">
+    <button id="ss" style="width:100%">${t('save')}</button></div>`;
+    $('#ss').onclick=()=>{const u=$('#su').value.trim().replace(/\/(rest|auth)\/v1.*$/,'').replace(/\/+$/,''),k=$('#sk').value.trim();if(!/^https:\/\/.+\.supabase\.co/.test(u)||k.length<20)return;_s('sb_url',u);_s('sb_key',k);location.reload()};return}
+  try{const {data}=await sb.auth.getSession();
+    if(data.session)await enter();else lockScreen()}catch(e){lockScreen();const p=$('#pe');if(p)p.textContent=t('netErr')}
+}
+// ---------- screens ----------
+function render(){
+  if(!unlocked)return CONFIGURED?lockScreen():boot();
+  const vt=view.t;let h='';
+  if(vt==='home')h=home();else if(vt==='accounts')h=accounts();else if(vt==='acc')h=accDetail(view.id);else if(vt==='month')h=monthly();else if(vt==='more')h=more();
+  const tab=(k,l)=>`<button class="${(vt===k||(vt==='acc'&&k==='accounts'))?'on':''}" onclick="nav({t:'${k}'})">${l}</button>`;
+  const fab=(vt==='home'||vt==='accounts')?`<button class="fab" onclick="quickAdd()" aria-label="Add">+</button>`:'';
+  $('#app').innerHTML=h+fab+`<div class="tabs">${tab('home',t('tHome'))}${tab('accounts',t('tAcc'))}${tab('month',t('tMonth'))}${tab('more',t('tMore'))}</div>`;
+}
+const unitName=u=>u==='roll'?t('roll'):t('mtr');
+const isV=id=>acc(id)&&acc(id).kind==='vendor';
+const vTag=a=>a.kind==='vendor'?` <span class="tag soon">${t('vtag')}</span>`:'';
+function dueCard(d){const a=acc(d.acc);return `<div class="card"><div class="row"><div onclick="nav({t:'acc',id:'${d.acc}'})"><div class="b">${esc(a?.name)}${a?vTag(a):''}</div><div class="mut">${fd(d.date)} ${dueTag(d.date)}</div>${d.note?`<div class="mut">${esc(d.note)}</div>`:''}</div>
+  <div style="text-align:right"><div class="b ${d.dir==='receive'?'in':'out'}">${inr(d.amt)}</div><button class="s ${d.dir==='receive'?'g':'r'}" onclick="markPaid('${d.id}')">${d.dir==='receive'?t('received'):t('paid')}</button></div></div></div>`}
+function home(){
+  const bs=db.accounts.map(a=>({a,b:bal(a.id)}));
+  const recv=bs.filter(x=>x.b>0.004).sort((x,y)=>y.b-x.b),pay=bs.filter(x=>x.b<-0.004).sort((x,y)=>x.b-y.b);
+  const tr=recv.reduce((s,x)=>s+x.b,0),tp=pay.reduce((s,x)=>s-x.b,0);
+  const dues=[...db.dues].sort((a,b)=>a.date.localeCompare(b.date));
+  const dr=dues.filter(d=>d.dir==='receive'),dp=dues.filter(d=>d.dir==='pay');
+  const balRow=(x,c)=>`<div class="card row" onclick="nav({t:'acc',id:'${x.a.id}'})"><span class="b">${esc(x.a.name)}${vTag(x.a)}</span><span class="b ${c}">${inr(x.b)}</span></div>`;
+  return `<h1>${t('hello')}</h1>
+  <div class="sum"><div class="card" style="background:var(--inbg)"><div class="mut">${t('toRecv')}</div><div class="big in">${inr(tr)}</div></div>
+  <div class="card" style="background:var(--outbg)"><div class="mut">${t('toPay')}</div><div class="big out">${inr(tp)}</div></div></div>
+  <h2>${t('dueRecv')}</h2>${dr.map(dueCard).join('')||`<div class="empty">${t('noDates')}</div>`}
+  <h2>${t('duePay')}</h2>${dp.map(dueCard).join('')||`<div class="empty">${t('noDates')}</div>`}
+  <h2>${t('whoOwes')}</h2>${recv.map(x=>balRow(x,'in')).join('')||`<div class="empty">${t('nobody')}</div>`}
+  <h2>${t('whomOwe')}</h2>${pay.map(x=>balRow(x,'out')).join('')||`<div class="empty">${t('nobody')}</div>`}`;
+}
+let q='',flt='all';
+function accounts(){
+  return `<div class="row"><h1>${t('accounts')}</h1><button onclick="accForm()">${t('new')}</button></div>
+  <div style="display:flex;gap:6px;margin-bottom:8px">${['all','client','vendor'].map(k=>`<button class="s ${flt===k?'':'o'}" onclick="flt='${k}';render()">${t(k==='all'?'all':k==='client'?'clients':'vendors')}</button>`).join('')}</div>
+  <input placeholder="${t('search')}" value="${esc(q)}" oninput="q=this.value;list()"><div id="list"></div>`+(setTimeout(list,0),'');
+}
+function list(){
+  const el=$('#list');if(!el)return;
+  const r=db.accounts.filter(a=>a.name.toLowerCase().includes(q.toLowerCase())&&(flt==='all'||(a.kind||'client')===flt));
+  el.innerHTML=r.map(a=>{const b=bal(a.id);return `<div class="card row" onclick="nav({t:'acc',id:'${a.id}'})"><div><div class="b">${esc(a.name)}${vTag(a)}</div><div class="mut">${esc(a.phone||'')}</div></div>
+  <div style="text-align:right" class="b ${b>0?'in':b<0?'out':'mut'}">${inr(b)}<div class="mut">${b>0?t('toRecv'):b<0?t('toPay'):t('settled')}</div></div></div>`}).join('')||`<div class="empty">${t('noAcc')}</div>`;
+}
+function accDetail(id){
+  const a=acc(id);if(!a)return accounts();
+  const v=a.kind==='vendor',b=bal(id);let run=0;
+  const es=db.entries.filter(e=>e.acc===id).sort((x,y)=>x.date.localeCompare(y.date)||x.ts-y.ts).map(e=>({...e,run:(run+=e.type==='gave'?e.amt:-e.amt)})).reverse();
+  const ds=db.dues.filter(d=>d.acc===id).sort((x,y)=>x.date.localeCompare(y.date));
+  const eRow=e=>{const sale=e.kind==='sale';return `<div class="card"><div class="row"><div><div class="b ${e.type==='gave'?'out':'in'}">${sale?'🧾 '+t('sale')+' ':(e.type==='gave'?t('dr'):t('cr'))+' '}${inr(e.amt)}</div><div class="mut">${fd(e.date)}</div></div><div class="mut" style="text-align:right">${t('balance')}<br>${inr(e.run)}</div></div>
+  ${sale?`<div class="mut" style="margin-top:4px">${e.qty} ${unitName(e.unit)} × ${inr(e.rate)}</div>`:''}
+  ${e.note?`<div style="margin-top:6px">${esc(e.note)}</div>`:''}
+  ${(e.files||[]).map(f=>`<button class="s o" style="margin-top:6px" onclick="openFile('${f.id}','${esc(f.name)}')">📎 ${esc(f.name)}</button>`).join(' ')}
+  <div style="margin-top:6px"><button class="s o" onclick="delEntry('${e.id}')">${t('del')}</button></div></div>`};
+  return `<div class="row"><button class="o s" onclick="nav({t:'accounts'})">${t('back')}</button><button class="o s" onclick="accForm('${id}')">${t('edit')}</button></div>
+  <h1>${esc(a.name)}${vTag(a)}</h1><div class="mut">${esc(a.phone||'')} ${esc(a.notes||'')}</div>
+  <div class="card" style="margin-top:10px;background:${b>0?'var(--inbg)':b<0?'var(--outbg)':'var(--card)'}"><div class="mut">${b>0?t('theyOwe'):b<0?t('iOwe'):t('allSettled')}</div><div class="big b ${b>0?'in':'out'}" style="font-size:26px">${inr(b)}</div></div>
+  ${v?'':`<button style="width:100%;margin-bottom:8px" onclick="entryForm('${id}','gave','sale')">${t('newSale')}</button>`}
+  <div class="row" style="gap:8px"><button class="r" style="flex:1" onclick="entryForm('${id}','gave')">${v?t('paidBtn'):t('gaveBtn')}</button><button class="g" style="flex:1" onclick="entryForm('${id}','got')">${v?t('billBtn'):t('gotBtn')}</button></div>
+  <div style="margin-top:8px"><button class="o" style="width:100%" onclick="dueForm('${id}')">${t('addDue')}</button></div>
+  ${ds.length?'<h2>'+t('upcoming')+'</h2>'+ds.map(d=>`<div class="card row"><div><div class="b ${d.dir==='receive'?'in':'out'}">${d.dir==='receive'?t('toRecv'):t('toPay')} ${inr(d.amt)}</div><div class="mut">${fd(d.date)} ${dueTag(d.date)} ${esc(d.note||'')}</div></div><div><button class="s ${d.dir==='receive'?'g':'r'}" onclick="markPaid('${d.id}')">${d.dir==='receive'?t('received'):t('paid')}</button> <button class="s o" onclick="delDue('${d.id}')">✕</button></div></div>`).join(''):''}
+  <h2>${t('ledger')}</h2>${es.map(eRow).join('')||`<div class="empty">${t('noEntries')}</div>`}`;
+}
+let mon=today().slice(0,7);
+function monthly(){
+  const vend=id=>isV(id),inM=d=>(d||'').startsWith(mon),sum=a=>a.reduce((s,e)=>s+e.amt,0);
+  const E=db.entries.filter(e=>inM(e.date));
+  const sales=E.filter(e=>e.kind==='sale').sort((x,y)=>y.date.localeCompare(x.date));
+  const recv=E.filter(e=>e.type==='got'&&!vend(e.acc)),paidV=E.filter(e=>e.type==='gave'&&vend(e.acc)),purch=E.filter(e=>e.type==='got'&&vend(e.acc));
+  const vOwed=db.accounts.filter(a=>a.kind==='vendor').map(a=>({a,b:bal(a.id)})).filter(x=>x.b<-0.004).sort((x,y)=>x.b-y.b);
+  const coll=db.accounts.filter(a=>a.kind!=='vendor').map(a=>bal(a.id)).filter(b=>b>0.004).reduce((s,b)=>s+b,0);
+  const qm=sales.filter(e=>e.unit!=='roll').reduce((s,e)=>s+e.qty,0),qr=sales.filter(e=>e.unit==='roll').reduce((s,e)=>s+e.qty,0);
+  const dv=db.dues.filter(d=>d.dir==='pay'&&vend(d.acc)&&inM(d.date)).sort((a,b)=>a.date.localeCompare(b.date));
+  const card=(l,v,c,bg)=>`<div class="card" style="margin:0;background:var(--${bg})"><div class="mut">${l}</div><div class="big ${c}" style="font-size:20px;font-weight:700">${inr(v)}</div></div>`;
+  return `<h1>${t('monthly')}</h1><label>${t('month')}</label><input type="month" value="${mon}" onchange="mon=this.value||mon;render()">
+  <div class="sum">${card(t('sales'),sum(sales),'','card')}${card(t('moneyIn'),sum(recv),'in','inbg')}${card(t('purchases'),sum(purch),'','card')}${card(t('paidVendors'),sum(paidV),'out','outbg')}</div>
+  <div class="mut" style="margin-top:6px">${qm?qm+' '+t('mtr'):''} ${qr?'· '+qr+' '+t('roll'):''}</div>
+  <h2>${t('vendorsToPay')} · <span class="out">${inr(vOwed.reduce((s,x)=>s-x.b,0))}</span></h2>
+  ${vOwed.map(x=>`<div class="card row" onclick="nav({t:'acc',id:'${x.a.id}'})"><span class="b">${esc(x.a.name)}</span><span class="b out">${inr(x.b)}</span></div>`).join('')||`<div class="empty">${t('nobody')}</div>`}
+  ${dv.length?`<h2>${t('duesMonth')}</h2>`+dv.map(dueCard).join(''):''}
+  <h2>${t('toCollect')} · <span class="in">${inr(coll)}</span></h2>
+  <h2>${t('salesList')}</h2>
+  ${sales.map(e=>`<div class="card" onclick="nav({t:'acc',id:'${e.acc}'})"><div class="row"><div><div class="b">${esc(acc(e.acc)?.name)}</div><div class="mut">${fd(e.date)} · ${e.qty} ${unitName(e.unit)} × ${inr(e.rate)}</div>${e.note?`<div class="mut">${esc(e.note)}</div>`:''}</div><div class="b">${inr(e.amt)}</div></div></div>`).join('')||`<div class="empty">${t('noSales')}</div>`}`;
+}
+function quickAdd(){
+  if(!db.accounts.length)return accForm();
+  const m=sheet(`<h1>${t('addTitle')}</h1><label>${t('pickAcc')}</label><select id="qa">${db.accounts.map(a=>`<option value="${a.id}">${esc(a.name)}${a.kind==='vendor'?' — '+t('vtag'):''}</option>`).join('')}</select><div id="qb"></div>
+  <button class="o" style="width:100%;margin-top:8px" id="qn">${t('newAccBtn')}</button>`);
+  const sel=m.querySelector('#qa');
+  const paint=()=>{const v=isV(sel.value);
+    const bt=(k,l,c)=>`<button class="${c||''}" style="width:100%;margin-top:8px" data-k="${k}">${l}</button>`;
+    m.querySelector('#qb').innerHTML=(v?bt('bill',t('billBtn'),'g')+bt('paid',t('paidBtn'),'r'):bt('sale',t('newSale'))+bt('got',t('payIn'),'g')+bt('gave',t('payOut'),'r'))+bt('due',t('dueBtn'),'o');
+    m.querySelectorAll('#qb button').forEach(b=>b.onclick=()=>{const id=sel.value,k=b.dataset.k;m.remove();
+      if(k==='sale')entryForm(id,'gave','sale');else if(k==='got'||k==='bill')entryForm(id,'got');else if(k==='gave'||k==='paid')entryForm(id,'gave');else dueForm(id)})};
+  sel.onchange=paint;paint();m.querySelector('#qn').onclick=()=>{m.remove();accForm()};
+}
+function more(){
+  return `<h1>${t('more')}</h1>
+  <div class="card"><div class="b">${t('language')}</div><div class="row" style="margin-top:8px;gap:8px"><button class="${lang==='gu'?'':'o'}" style="flex:1" onclick="setLang('gu')">ગુજરાતી</button><button class="${lang==='en'?'':'o'}" style="flex:1" onclick="setLang('en')">English</button></div></div>
+  <div class="card"><div class="b">${t('backup')}</div><p class="mut">${t('backupDesc2')}</p><button onclick="backup()">${t('dlBackup')}</button></div>
+  <div class="card"><button class="o" onclick="logout()">${t('logout')}</button></div>`;
+}
+// ---------- forms ----------
+function sheet(html){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet">${html}</div>`;m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);return m}
+function accForm(id){
+  const a=id?acc(id):{name:'',phone:'',notes:'',kind:'client'};
+  const m=sheet(`<h1>${id?t('editAcc'):t('newAcc')}</h1><label>${t('kind')}</label><select id="k"><option value="client" ${a.kind!=='vendor'?'selected':''}>${t('client')}</option><option value="vendor" ${a.kind==='vendor'?'selected':''}>${t('vendor')}</option></select>
+  <label>${t('name')}</label><input id="n" value="${esc(a.name)}"><label>${t('phoneOpt')}</label><input id="p" inputmode="tel" value="${esc(a.phone)}"><label>${t('notesOpt')}</label><textarea id="no" rows="2">${esc(a.notes)}</textarea>
+  <div class="btns"><button class="o" id="c">${t('cancel')}</button><button id="s">${t('save')}</button></div>${id?`<button class="r" style="width:100%;margin-top:10px" id="d">${t('delAcc')}</button>`:''}`);
+  m.querySelector('#c').onclick=()=>m.remove();
+  m.querySelector('#s').onclick=async e=>{const n=m.querySelector('#n').value.trim();if(!n)return;e.target.disabled=true;
+    const row={name:n,kind:m.querySelector('#k').value,phone:m.querySelector('#p').value,notes:m.querySelector('#no').value};
+    const r=id?await sb.from('accounts').update(row).eq('id',id):await sb.from('accounts').insert(row);
+    if(!okr(r)){e.target.disabled=false;return}m.remove();await refresh()};
+  if(id)m.querySelector('#d').onclick=async()=>{if(confirm(t('delAccQ'))){if(okr(await sb.from('accounts').delete().eq('id',id))){m.remove();view={t:'accounts'};await refresh()}}};
+}
+function entryForm(id,type,kind){
+  const sale=kind==='sale',v=isV(id);
+  const title=sale?t('newSale'):v?(type==='gave'?t('paidTitle'):t('billTitle')):(type==='gave'?t('gaveTitle'):t('gotTitle'));
+  const fields=sale?`<label>${t('qty')}</label><input id="q" type="number" inputmode="decimal" step="any">
+  <label>${t('unit')}</label><select id="u"><option value="meter">${t('mtr')}</option><option value="roll">${t('roll')}</option></select>
+  <label id="rl">${t('rate',t('mtr'))}</label><input id="r" type="number" inputmode="decimal" step="any">
+  <label>${t('final')}</label><input id="a" type="number" inputmode="decimal" step="any" style="font-weight:700">`
+  :`<label>${t('amount')}</label><input id="a" type="number" inputmode="decimal" step="any">`;
+  const m=sheet(`<h1>${title} — ${esc(acc(id).name)}</h1>${fields}
+  <label>${t('date')}</label><input id="d" type="date" value="${today()}">
+  <label>${sale?t('desc'):t('note')}</label><textarea id="no" rows="2" placeholder="${sale?'':t('notePh')}"></textarea>
+  <label>${t('docs')}</label><input id="f" type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
+  <div class="btns"><button class="o" id="c">${t('cancel')}</button><button class="${type==='gave'?'r':'g'}" id="s">${t('save')}</button></div>`);
+  const $m=x=>m.querySelector(x);
+  if(sale){const calc=()=>{const qv=parseFloat($m('#q').value),rv=parseFloat($m('#r').value);if(qv>0&&rv>0)$m('#a').value=Math.round(qv*rv*100)/100};
+    $m('#q').oninput=calc;$m('#r').oninput=calc;$m('#u').onchange=()=>{$m('#rl').textContent=t('rate',$m('#u').value==='roll'?t('roll'):t('mtr'));calc()}}
+  $m('#c').onclick=()=>m.remove();
+  $m('#s').onclick=async e=>{const amt=parseFloat($m('#a').value);if(!(amt>0))return;
+    let qv=null,rv=null,uv=null;if(sale){qv=parseFloat($m('#q').value);rv=parseFloat($m('#r').value);uv=$m('#u').value;if(!(qv>0&&rv>0))return}
+    e.target.disabled=true;
+    const eid=crypto.randomUUID(),files=[];
+    for(const f of $m('#f').files){
+      const ext=(f.name.split('.').pop()||'bin').replace(/[^a-z0-9]/gi,'').slice(0,5)||'bin';
+      const path=`${uidv}/${eid}/${uid()}.${ext}`;
+      const u=await sb.storage.from('documents').upload(path,f,{contentType:f.type||undefined});
+      if(!okr(u)){e.target.disabled=false;return}
+      files.push({id:path,name:f.name});
+    }
+    const r=await sb.from('entries').insert({id:eid,account_id:id,type,amount:amt,entry_date:$m('#d').value||today(),note:$m('#no').value.trim(),files,kind:sale?'sale':'',qty:qv,unit:uv||'',rate:rv});
+    if(!okr(r)){e.target.disabled=false;return}m.remove();await refresh()};
+}
+function dueForm(id){
+  const m=sheet(`<h1>${t('dueTitle')} — ${esc(acc(id).name)}</h1>
+  <label>${t('type')}</label><select id="t"><option value="receive">${t('recvFrom')}</option><option value="pay">${t('payTo')}</option></select>
+  <label>${t('amount')}</label><input id="a" type="number" inputmode="decimal"><label>${t('dueDate')}</label><input id="d" type="date" value="${today()}"><label>${t('note')}</label><input id="no">
+  <div class="btns"><button class="o" id="c">${t('cancel')}</button><button id="s">${t('save')}</button></div>`);
+  m.querySelector('#c').onclick=()=>m.remove();
+  m.querySelector('#s').onclick=async e=>{const amt=parseFloat(m.querySelector('#a').value);if(!(amt>0))return;e.target.disabled=true;
+    const r=await sb.from('dues').insert({account_id:id,dir:m.querySelector('#t').value,amount:amt,due_date:m.querySelector('#d').value||today(),note:m.querySelector('#no').value.trim()});
+    if(!okr(r)){e.target.disabled=false;return}m.remove();await refresh()};
+}
+// ---------- actions ----------
+async function markPaid(did){const d=db.dues.find(x=>x.id===did);if(!d)return;
+  const r=await sb.from('entries').insert({account_id:d.acc,type:d.dir==='receive'?'got':'gave',amount:d.amt,entry_date:today(),note:(d.dir==='receive'?t('recvNote'):t('paidNote'))+(d.note||t('dueNote')),files:[]});
+  if(!okr(r))return;if(okr(await sb.from('dues').delete().eq('id',did)))await refresh()}
+async function delDue(id){if(confirm(t('delDueQ'))&&okr(await sb.from('dues').delete().eq('id',id)))await refresh()}
+async function delEntry(id){if(!confirm(t('delEntryQ')))return;
+  const e=db.entries.find(x=>x.id===id);
+  if(okr(await sb.from('entries').delete().eq('id',id))){if(e&&e.files.length)await sb.storage.from('documents').remove(e.files.map(f=>f.id));await refresh()}}
+async function openFile(path,name){const r=await sb.storage.from('documents').createSignedUrl(path,300);
+  if(r.error||!r.data)return alert(t('noFile'));window.open(r.data.signedUrl,'_blank')}
+function backup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,1)],{type:'application/json'}));a.download='ledger-backup-'+today()+'.json';a.click()}
+boot();
+</script></body></html>
